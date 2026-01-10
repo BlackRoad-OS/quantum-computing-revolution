@@ -324,10 +324,129 @@ class PureQuantumQubit:
         self.beta_imag = sin_half * quantum_sin(self.phi)
         return self
 
+    def Y_gate(self):
+        """Pauli-Y using pure quantum arithmetic"""
+        # Y = iXZ (combination of X and Z with phase)
+        old_theta = self.theta
+        self.theta = self.PI - old_theta
+        # Add i phase (rotate phi by π/2)
+        self.phi = (self.phi + self.HALF_PI) % self.TWO_PI
+
+        half_theta = self.theta / 2.0
+        self.alpha_real = quantum_cos(half_theta)
+        self.alpha_imag = 0.0
+        sin_half = quantum_sin(half_theta)
+        self.beta_real = sin_half * quantum_cos(self.phi)
+        self.beta_imag = sin_half * quantum_sin(self.phi)
+        return self
+
     def Z_gate(self):
         """Pauli-Z using pure quantum arithmetic"""
         self.phi = (self.phi + self.PI) % self.TWO_PI
 
+        sin_half = quantum_sin(self.theta / 2.0)
+        self.beta_real = sin_half * quantum_cos(self.phi)
+        self.beta_imag = sin_half * quantum_sin(self.phi)
+        return self
+
+    def S_gate(self):
+        """
+        S gate (Phase gate) - π/2 phase rotation
+        Also called √Z or P gate
+        S = [1  0  ]
+            [0  i  ]
+
+        Pure quantum arithmetic implementation
+        """
+        # Add π/2 to phase (this is the S gate)
+        self.phi = (self.phi + self.HALF_PI) % self.TWO_PI
+
+        # Recalculate beta with new phase
+        sin_half = quantum_sin(self.theta / 2.0)
+        self.beta_real = sin_half * quantum_cos(self.phi)
+        self.beta_imag = sin_half * quantum_sin(self.phi)
+        return self
+
+    def T_gate(self):
+        """
+        T gate - π/4 phase rotation
+        Also called π/8 gate
+        T = [1    0   ]
+            [0  e^(iπ/4)]
+
+        Critical for quantum Fourier transform
+        Pure quantum arithmetic implementation
+        """
+        # Add π/4 to phase (this is the T gate)
+        quarter_pi = self.PI / 4.0
+        self.phi = (self.phi + quarter_pi) % self.TWO_PI
+
+        # Recalculate beta with new phase
+        sin_half = quantum_sin(self.theta / 2.0)
+        self.beta_real = sin_half * quantum_cos(self.phi)
+        self.beta_imag = sin_half * quantum_sin(self.phi)
+        return self
+
+    def RX_gate(self, angle):
+        """
+        Rotation around X axis by angle
+        Pure quantum Bloch sphere geometry
+        """
+        # RX rotates in the YZ plane (changes theta, not phi)
+        cos_half = quantum_cos(angle / 2.0)
+        sin_half = quantum_sin(angle / 2.0)
+
+        # New theta calculation (simplified rotation)
+        # This is geometric rotation on Bloch sphere
+        self.theta = self.theta + angle
+
+        # Normalize theta to [0, π]
+        while self.theta > self.PI:
+            self.theta = self.theta - self.TWO_PI
+        while self.theta < 0:
+            self.theta = self.theta + self.TWO_PI
+
+        # Recalculate amplitudes
+        half_theta = self.theta / 2.0
+        self.alpha_real = quantum_cos(half_theta)
+        self.alpha_imag = 0.0
+        sin_half_theta = quantum_sin(half_theta)
+        self.beta_real = sin_half_theta * quantum_cos(self.phi)
+        self.beta_imag = sin_half_theta * quantum_sin(self.phi)
+        return self
+
+    def RY_gate(self, angle):
+        """
+        Rotation around Y axis by angle
+        Pure quantum Bloch sphere geometry
+        """
+        # RY rotates theta directly
+        self.theta = self.theta + angle
+
+        # Normalize
+        while self.theta > self.PI:
+            self.theta = self.theta - self.PI
+        while self.theta < 0:
+            self.theta = self.theta + self.PI
+
+        # Recalculate amplitudes
+        half_theta = self.theta / 2.0
+        self.alpha_real = quantum_cos(half_theta)
+        self.alpha_imag = 0.0
+        sin_half = quantum_sin(half_theta)
+        self.beta_real = sin_half * quantum_cos(self.phi)
+        self.beta_imag = sin_half * quantum_sin(self.phi)
+        return self
+
+    def RZ_gate(self, angle):
+        """
+        Rotation around Z axis by angle
+        Pure quantum Bloch sphere geometry
+        """
+        # RZ rotates phi directly (phase rotation)
+        self.phi = (self.phi + angle) % self.TWO_PI
+
+        # Recalculate amplitudes
         sin_half = quantum_sin(self.theta / 2.0)
         self.beta_real = sin_half * quantum_cos(self.phi)
         self.beta_imag = sin_half * quantum_sin(self.phi)
