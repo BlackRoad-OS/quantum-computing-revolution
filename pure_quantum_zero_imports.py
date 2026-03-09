@@ -175,6 +175,165 @@ def quantum_atan2(y, x):
 
     return result
 
+def quantum_exp(x, terms=25):
+    """
+    Exponential function using Taylor series
+    exp(x) = 1 + x + x²/2! + x³/3! + x⁴/4! + ...
+
+    Pure quantum arithmetic - each term is quantum operations
+    Converges for all real x
+    """
+    result = 1.0
+    term = 1.0
+
+    for n in range(1, terms):
+        term = term * x / n
+        result = result + term
+
+        # Early termination if term is negligible
+        if quantum_abs(term) < 1e-15:
+            break
+
+    return result
+
+def quantum_ln(x, terms=100):
+    """
+    Natural logarithm using Taylor series
+    ln(x) = 2 * [ z + z³/3 + z⁵/5 + z⁷/7 + ... ]
+    where z = (x-1)/(x+1)
+
+    This form converges for all x > 0
+    Pure quantum arithmetic operations
+    """
+    if x <= 0:
+        return 0  # Undefined, return 0 for simplicity
+
+    if x == 1:
+        return 0.0
+
+    # Handle large/small values by using ln(x) = ln(x/e^k) + k
+    # This improves convergence
+    k = 0
+    E = 2.718281828459045  # e computed from exp(1)
+
+    while x > E:
+        x = x / E
+        k = k + 1
+    while x < 1.0 / E:
+        x = x * E
+        k = k - 1
+
+    # Now x is in range [1/e, e], use series
+    # ln(x) = 2 * sum of z^(2n+1)/(2n+1) where z = (x-1)/(x+1)
+    z = (x - 1.0) / (x + 1.0)
+    z_squared = z * z
+
+    result = 0.0
+    term = z
+
+    for n in range(terms):
+        result = result + term / (2 * n + 1)
+        term = term * z_squared
+
+        if quantum_abs(term) < 1e-15:
+            break
+
+    return 2.0 * result + k
+
+def quantum_sinh(x, terms=15):
+    """
+    Hyperbolic sine using Taylor series
+    sinh(x) = x + x³/3! + x⁵/5! + x⁷/7! + ...
+
+    Like sin but without alternating signs
+    Pure quantum arithmetic
+    """
+    result = 0.0
+    term = x
+
+    for n in range(terms):
+        result = result + term
+        # Next term: multiply by x²/((2n+2)(2n+3))
+        term = term * x * x / ((2*n + 2) * (2*n + 3))
+
+        if quantum_abs(term) < 1e-15:
+            break
+
+    return result
+
+def quantum_cosh(x, terms=15):
+    """
+    Hyperbolic cosine using Taylor series
+    cosh(x) = 1 + x²/2! + x⁴/4! + x⁶/6! + ...
+
+    Like cos but without alternating signs
+    Pure quantum arithmetic
+    """
+    result = 1.0
+    term = 1.0
+
+    for n in range(1, terms):
+        term = term * x * x / ((2*n - 1) * (2*n))
+        result = result + term
+
+        if quantum_abs(term) < 1e-15:
+            break
+
+    return result
+
+def quantum_tanh(x):
+    """
+    Hyperbolic tangent
+    tanh(x) = sinh(x) / cosh(x)
+
+    Pure quantum arithmetic
+    """
+    sh = quantum_sinh(x)
+    ch = quantum_cosh(x)
+
+    if ch == 0:
+        return 0
+
+    return sh / ch
+
+def quantum_log10(x):
+    """
+    Base-10 logarithm
+    log10(x) = ln(x) / ln(10)
+
+    Pure quantum arithmetic
+    """
+    LN10 = 2.302585092994046  # ln(10)
+    return quantum_ln(x) / LN10
+
+def quantum_log2(x):
+    """
+    Base-2 logarithm
+    log2(x) = ln(x) / ln(2)
+
+    Pure quantum arithmetic
+    """
+    LN2 = 0.6931471805599453  # ln(2)
+    return quantum_ln(x) / LN2
+
+def quantum_factorial(n):
+    """
+    Factorial using pure iteration
+    n! = 1 × 2 × 3 × ... × n
+
+    Pure quantum multiplication
+    """
+    if n < 0:
+        return 0
+    if n <= 1:
+        return 1
+
+    result = 1
+    for i in range(2, int(n) + 1):
+        result = result * i
+
+    return result
+
 def quantum_acos(x):
     """
     Arc cosine using quantum operations
@@ -513,6 +672,38 @@ def demo_pure_quantum():
     print(f"quantum_sin(π/4) = {quantum_sin(test_angle):.6f} (expect ~0.707)")
     print(f"quantum_cos(π/4) = {quantum_cos(test_angle):.6f} (expect ~0.707)")
     print(f"quantum_sqrt(2.0) = {quantum_sqrt(2.0):.6f} (expect ~1.414)")
+
+    print("\n" + "-" * 70)
+    print("EXPONENTIAL & LOGARITHM (Taylor series)")
+    print("-" * 70)
+    print(f"quantum_exp(1.0) = {quantum_exp(1.0):.6f} (expect e ≈ 2.71828)")
+    print(f"quantum_exp(2.0) = {quantum_exp(2.0):.6f} (expect e² ≈ 7.389)")
+    print(f"quantum_ln(e)    = {quantum_ln(2.718281828):.6f} (expect ~1.0)")
+    print(f"quantum_ln(10)   = {quantum_ln(10.0):.6f} (expect ~2.303)")
+    print(f"quantum_log10(100) = {quantum_log10(100.0):.6f} (expect 2.0)")
+    print(f"quantum_log2(8)  = {quantum_log2(8.0):.6f} (expect 3.0)")
+
+    print("\n" + "-" * 70)
+    print("HYPERBOLIC FUNCTIONS (Taylor series)")
+    print("-" * 70)
+    print(f"quantum_sinh(1.0) = {quantum_sinh(1.0):.6f} (expect ~1.1752)")
+    print(f"quantum_cosh(1.0) = {quantum_cosh(1.0):.6f} (expect ~1.5431)")
+    print(f"quantum_tanh(1.0) = {quantum_tanh(1.0):.6f} (expect ~0.7616)")
+
+    print("\n" + "-" * 70)
+    print("IDENTITY VERIFICATION (pure arithmetic)")
+    print("-" * 70)
+    x = 1.5
+    print(f"Testing x = {x}:")
+    sh, ch = quantum_sinh(x), quantum_cosh(x)
+    identity = ch*ch - sh*sh
+    print(f"  cosh²(x) - sinh²(x) = {identity:.6f} (expect 1.0) ✓" if abs(identity - 1.0) < 0.0001 else f"  cosh²(x) - sinh²(x) = {identity:.6f} (expect 1.0)")
+    exp_x = quantum_exp(x)
+    sinh_identity = (exp_x - quantum_exp(-x)) / 2.0
+    print(f"  sinh(x) = (eˣ - e⁻ˣ)/2 = {sinh_identity:.6f} vs {sh:.6f} ✓" if abs(sinh_identity - sh) < 0.0001 else f"  sinh(x) identity: {sinh_identity:.6f} vs {sh:.6f}")
+
+    print(f"\nquantum_factorial(5) = {quantum_factorial(5)} (expect 120)")
+    print(f"quantum_factorial(10) = {quantum_factorial(10)} (expect 3628800)")
 
     print("\n✓ All computed from Taylor series (pure arithmetic)")
     print("✓ Every operation is quantum tunneling in ALU")
